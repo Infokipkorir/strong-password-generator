@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Strong Password Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #0d6efd, #6610f2);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .app-card {
+            max-width: 420px;
+            width: 100%;
+            border-radius: 20px;
+        }
+        .strength-bar {
+            height: 8px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card shadow app-card">
+    <div class="card-body p-4">
+        <h4 class="text-center mb-4">🔐 Password Generator</h4>
+
+        <div id="messageBox"></div>
+        <div class="input-group mb-3">
+            <input type="text" id="password" class="form-control" placeholder="Tap Generate to create password" readonly>
+            <button class="btn btn-outline-primary" onclick="copyPassword()">Copy</button>
+        </div>
+
+        <div class="mb-2">
+            <div class="progress">
+                <div id="strengthBar" class="progress-bar strength-bar"></div>
+            </div>
+            <small id="strengthText" class="text-muted"></small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password Length</label>
+            <input type="range" id="length" class="form-range" min="6" max="32" value="12" oninput="lengthValue.innerText=this.value">
+            <small>Length: <span id="lengthValue">12</span></small>
+        </div>
+
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="uppercase" checked>
+            <label class="form-check-label">Uppercase Letters</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="lowercase" checked>
+            <label class="form-check-label">Lowercase Letters</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="numbers" checked>
+            <label class="form-check-label">Numbers</label>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="symbols" checked>
+            <label class="form-check-label">Symbols</label>
+        </div>
+
+        <button class="btn btn-primary w-100" onclick="generatePassword()">Generate Password</button>
+    </div>
+</div>
+
+<script>
+    function generatePassword() {
+        const length = parseInt(document.getElementById('length').value);
+        const useUpper = document.getElementById('uppercase').checked;
+        const useLower = document.getElementById('lowercase').checked;
+        const useNumbers = document.getElementById('numbers').checked;
+        const useSymbols = document.getElementById('symbols').checked;
+
+        const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        const lower = "abcdefghijklmnopqrstuvwxyz";
+        const nums = "0123456789";
+        const syms = "!@#$%^&*()_+{}[]<>?";
+
+        let chars = "";
+        if (useUpper) chars += upper;
+        if (useLower) chars += lower;
+        if (useNumbers) chars += nums;
+        if (useSymbols) chars += syms;
+
+        if (chars.length === 0) {
+            showMessage('Please select at least one character option', 'danger');
+            return;
+        }
+
+        let password = "";
+        for (let i = 0; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        document.getElementById('password').value = password;
+        checkStrength(password);
+        showMessage('Password generated successfully', 'success');
+    }
+
+    function checkStrength(password) {
+        let score = 0;
+        if (password.length >= 8) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        const bar = document.getElementById('strengthBar');
+        const text = document.getElementById('strengthText');
+
+        const levels = [
+            { width: '20%', class: 'bg-danger', label: 'Very Weak' },
+            { width: '40%', class: 'bg-warning', label: 'Weak' },
+            { width: '60%', class: 'bg-info', label: 'Medium' },
+            { width: '80%', class: 'bg-primary', label: 'Strong' },
+            { width: '100%', class: 'bg-success', label: 'Very Strong' }
+        ];
+
+        const level = levels[Math.max(0, score - 1)];
+        bar.style.width = level.width;
+        bar.className = `progress-bar strength-bar ${level.class}`;
+        text.innerText = `Strength: ${level.label}`;
+    }
+
+    function copyPassword() {
+        const field = document.getElementById('password');
+        if (!field.value) {
+            showMessage('Generate a password first', 'warning');
+            return;
+        }
+        field.select();
+        document.execCommand('copy');
+        showMessage('Password copied to clipboard', 'info');
+    }
+    function showMessage(message, type) {
+        const box = document.getElementById('messageBox');
+        box.innerHTML = `<div class="alert alert-${type} py-2">${message}</div>`;
+        setTimeout(() => box.innerHTML = '', 3000);
+    }
+</script>
+
+</body>
+</html>
